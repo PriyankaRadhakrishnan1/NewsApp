@@ -1,0 +1,21 @@
+CREATE TABLE news (
+  id TEXT NOT NULL PRIMARY KEY,
+  title TEXT,
+  description TEXT,
+  content TEXT,
+  url TEXT,
+  imageUrl TEXT,
+  publishedAt TEXT,
+  source TEXT
+);
+
+insertNews:
+INSERT OR REPLACE INTO news (id, title, description, content, url, imageUrl, publishedAt, source)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+selectAll:
+SELECT * FROM news;
+
+-- Add a clearAllNews for refresh convenience if needed
+clearAllNews:
+DELETE FROM news;
