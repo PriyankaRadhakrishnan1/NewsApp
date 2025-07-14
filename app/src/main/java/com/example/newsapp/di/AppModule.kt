@@ -3,13 +3,14 @@ package com.example.newsapp.di
 import android.content.Context
 import com.example.shared.NewsAppDatabase
 import com.example.shared.data.api.NewsApi
+import com.example.shared.data.repo.NewsDetailRepository
 import com.example.shared.data.repo.NewsRepository
 import com.example.shared.db.DatabaseDriverFactory
+import com.example.shared.viewmodel.NewsDetailViewModel
 import com.example.shared.viewmodel.NewsViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
@@ -25,6 +26,9 @@ import kotlinx.serialization.json.Json
 object AppModule {
     lateinit var newsViewModel : NewsViewModel
         private set // this means we can access from anywhere but only modified in here.
+
+    lateinit var newsDetailsViewModel : NewsDetailViewModel
+        private set
 
     fun init(context: Context){
         val db = NewsAppDatabase(
@@ -48,8 +52,11 @@ object AppModule {
             }
         }
         val api = NewsApi(client)
-        val repository = NewsRepository(api, db)
+        val newsRepository = NewsRepository(api, db)
+        val newsDetailrepo = NewsDetailRepository(db)
 
-        newsViewModel = NewsViewModel(repository)
+        newsViewModel = NewsViewModel(newsRepository)
+        newsDetailsViewModel = NewsDetailViewModel(newsDetailrepo)
+
     }
 }

@@ -11,7 +11,7 @@ import com.example.newsapp.ui.theme.NewsAppTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppModule.init(this) //check is this required.
+        AppModule.init(this)
         enableEdgeToEdge()
         setContent {
             NewsAppTheme {

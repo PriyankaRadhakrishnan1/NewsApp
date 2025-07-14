@@ -15,25 +15,38 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavHostController
+import com.example.shared.viewmodel.NewsDetailUiState
+import com.example.shared.viewmodel.NewsDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun NewsDetailScreen(url: String, navController: NavHostController) {
+fun NewsDetailScreen(
+    newsId: String,
+    navController: NavHostController,
+    viewModel: NewsDetailViewModel
+) {
+    val uiState by viewModel.uiState.collectAsState()
     var isLoading by remember { mutableStateOf(true) }
+
+    // Fetch URL when newsId changes
+    LaunchedEffect(newsId) {
+        viewModel.loadNewsUrl(newsId)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -42,14 +55,7 @@ fun NewsDetailScreen(url: String, navController: NavHostController) {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Go back")
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = Color.Transparent,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                    actionIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                }
             )
         }
     ) { paddingValues ->
@@ -58,54 +64,57 @@ fun NewsDetailScreen(url: String, navController: NavHostController) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // The WebView should always be present in the composition
-            AndroidView(
-                modifier = Modifier.fillMaxSize(), // Fill the Box
-                factory = { context ->
-                    WebView(context).apply {
-                        settings.javaScriptEnabled = true
-                        webViewClient = object : WebViewClient() {
-                            override fun onPageStarted(
-                                view: WebView?,
-                                url: String?,
-                                favicon: Bitmap?
-                            ) {
-                                // When a page starts loading, show the indicator
-                                isLoading = true
-                                super.onPageStarted(view, url, favicon)
-                            }
+            when (uiState) {
+                is NewsDetailUiState.Loading -> {
+                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                }
 
-                            override fun onPageFinished(view: WebView?, url: String?) {
-                                // When a page finishes loading, hide the indicator
-                                isLoading = false
-                                super.onPageFinished(view, url)
-                            }
+                is NewsDetailUiState.Success -> {
+                    val url = (uiState as NewsDetailUiState.Success).url
 
-                            override fun shouldOverrideUrlLoading(
-                                view: WebView?,
-                                url: String?
-                            ): Boolean {
-                                // Allow the WebView to handle its own internal navigation
-                                view?.loadUrl(url!!)
-                                return true
+                    AndroidView(
+                        modifier = Modifier.fillMaxSize(),
+                        factory = { context ->
+                            WebView(context).apply {
+                                settings.javaScriptEnabled = true
+                                webViewClient = object : WebViewClient() {
+                                    override fun onPageStarted(
+                                        view: WebView?, url: String?, favicon: Bitmap?
+                                    ) {
+                                        isLoading = true
+                                        super.onPageStarted(view, url, favicon)
+                                    }
+
+                                    override fun onPageFinished(view: WebView?, url: String?) {
+                                        isLoading = false
+                                        super.onPageFinished(view, url)
+                                    }
+
+                                    override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                                        view?.loadUrl(url!!)
+                                        return true
+                                    }
+                                }
+                                loadUrl(url)
                             }
                         }
-                        loadUrl(url) // Initial load of the URL
-                    }
-                },
-                update = { webView ->
-                    // This block is for recomposition. If 'url' ever changed (unlikely for this screen),
-                    // you'd call webView.loadUrl(url) here.
-                    // For a fixed URL per screen instance, it's often empty.
-                }
-            )
+                    )
 
-            // The CircularProgressIndicator is drawn on top of the WebView if isLoading is true
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = MaterialTheme.colorScheme.primary
-                )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.align(Alignment.Center),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                is NewsDetailUiState.Error -> {
+                    Text(
+                        text = (uiState as NewsDetailUiState.Error).message,
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }

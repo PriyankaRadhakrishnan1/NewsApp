@@ -130,7 +130,7 @@ fun NewsListScreen(
 
             // PullToRefreshBox wraps the main content
             PullToRefreshBox(
-                modifier = Modifier.fillMaxSize(), // Fill remaining space in the Column
+                modifier = Modifier.fillMaxSize(), //it Fills remaining space in the Column
                 state = pullRefreshState,
                 isRefreshing = isRefreshing,
                 onRefresh = viewModel::refresh,
@@ -168,7 +168,7 @@ fun NewsListScreen(
                     }
 
                     NewsUiState.Loading -> {
-                        // Show full screen loader only if no news is loaded and not just refreshing
+                        // it Shows full screen loader only if no news is loaded and not just refreshing
                         if (!isRefreshing && viewModel.loadedNews.isEmpty()) {
                             println("UI: Displaying UI State: Loading (full screen).")
                             CenteredLoading()
@@ -316,23 +316,21 @@ fun NewsListContent(
                         Text("You're up to date! No more news.")
                     }
                 }
-                // No else needed, as other conditions cover all states or result in no footer content
             }
         }
     }
 }
 
-// Composable for a single news item (no changes needed from your previous version)
 @Composable
 fun NewsItem(news: News, imageLoader: ImageLoader, navController: NavHostController) {
-    Surface ( // Use Material3 Surface
+    Surface (
         modifier = Modifier
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .background(MaterialTheme.colorScheme.surface)
             .clip(shape = RoundedCornerShape(12.dp))
             .fillMaxWidth()
             .clickable {
-                val encodedUrl = URLEncoder.encode(news.url, StandardCharsets.UTF_8.toString())
+                val encodedUrl = URLEncoder.encode(news.id, StandardCharsets.UTF_8.toString())
                 navController.navigate("news_detail_screen/${encodedUrl}")
             },
         tonalElevation = 4.dp
@@ -395,7 +393,6 @@ fun NewsItem(news: News, imageLoader: ImageLoader, navController: NavHostControl
                         fontWeight = FontWeight.Medium
                     ),
                     modifier = Modifier.clickable {
-                        // TODO: Implement read more click, e.g., open a browser with news.url
                     }
                 )
             }
@@ -404,7 +401,6 @@ fun NewsItem(news: News, imageLoader: ImageLoader, navController: NavHostControl
 }
 
 
-// Composable for displaying a centered message (e.g., error, no data)
 @Composable
 fun CenteredMessage(message: String, onRetry: () -> Unit) {
     println("Displaying CenteredMessage: $message")

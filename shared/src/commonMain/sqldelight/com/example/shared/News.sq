@@ -9,6 +9,9 @@ CREATE TABLE news (
   source TEXT
 );
 
+getDetailedNews:
+SELECT url AS url FROM news WHERE id = :id;
+
 insertNews:
 INSERT OR REPLACE INTO news (id, title, description, content, url, imageUrl, publishedAt, source)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);

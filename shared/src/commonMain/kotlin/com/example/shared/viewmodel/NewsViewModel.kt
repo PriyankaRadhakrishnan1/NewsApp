@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-class NewsViewModel(private val repository: NewsRepository) : ViewModel() {
+class NewsViewModel(private val newsRepository: NewsRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow<NewsUiState>(NewsUiState.Loading)
     val uiState: StateFlow<NewsUiState> = _uiState
@@ -59,13 +59,12 @@ class NewsViewModel(private val repository: NewsRepository) : ViewModel() {
         }
 
         viewModelScope.launch {
-            // Keep the delay for debugging if needed, or remove it entirely
             delay(1000)
 
             println("VM: Attempting to fetch page $currentPage...")
             try {
                 // CORRECTED LINE: Pass the search query to the repository
-                val newsApiResponse = repository.fetchNewsPage(currentPage, pageSize, _searchQuery.value)
+                val newsApiResponse = newsRepository.fetchNewsPage(currentPage, pageSize, _searchQuery.value)
                 if (newsApiResponse is NewsApiReponse.Success) {
                     val newItems: List<News> = newsApiResponse.newsResponse.mapToNewsList()
 
@@ -85,7 +84,7 @@ class NewsViewModel(private val repository: NewsRepository) : ViewModel() {
                         if (uniqueNewItems.isNotEmpty()) {
                             _loadedNews.addAll(uniqueNewItems)
                             currentPage++
-                            hasMoreToLoad = repository.hasMoreData(_loadedNews.size)
+                            hasMoreToLoad = newsRepository.hasMoreData(_loadedNews.size)
                             _uiState.value =
                                 NewsUiState.Success(_loadedNews.toList(), hasMoreToLoad)
                             println("VM: Successfully loaded ${uniqueNewItems.size} unique new items. Total loaded: ${_loadedNews.size}. Has more: $hasMoreToLoad")
@@ -126,10 +125,10 @@ class NewsViewModel(private val repository: NewsRepository) : ViewModel() {
                 }
 
                 if (_loadedNews.isEmpty()) {
-                    val cached = repository.getCachedNews()
+                    val cached = newsRepository.getCachedNews()
                     if (cached.isNotEmpty()) {
                         _loadedNews.addAll(cached)
-                        hasMoreToLoad = repository.hasMoreData(_loadedNews.size)
+                        hasMoreToLoad = newsRepository.hasMoreData(_loadedNews.size)
                         _uiState.value = NewsUiState.Success(_loadedNews.toList(), hasMoreToLoad)
                         println("VM: Loaded ${cached.size} items from cache due to network error.")
                     } else {
@@ -168,9 +167,9 @@ class NewsViewModel(private val repository: NewsRepository) : ViewModel() {
             hasMoreToLoad = true
             _loadedNews.clear()
         viewModelScope.launch {
-            repository.clearCache() // clear db on refresh
+            newsRepository.clearCache() // it clears db on refresh
         }
-            loadNextPage() // This will now correctly pick up the current _searchQuery.value
+            loadNextPage() // now it correctly picks the current _searchQuery.value
     }
 
     fun retry() {

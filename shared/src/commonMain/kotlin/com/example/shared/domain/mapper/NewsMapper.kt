@@ -12,7 +12,7 @@ fun Article.mapToNews(): News = News(
     url = url,
     imageUrl = urlToImage?:"",
     publishedAt = publishedAt,
-    source = source?.name ?: "Unknown"
+    source = source?.name.orEmpty().ifBlank { "Unknown" }
 )
 
 fun NewsResponse.mapToNewsList(): List<News> = articles.map { it.mapToNews() }

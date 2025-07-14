@@ -15,7 +15,7 @@ class NewsApi(private val client: HttpClient) {
     suspend fun fetchTopHeadlines(
         page: Int,
         pageSize: Int,
-        country: String = "in",
+        country: String = "US",
     ): NewsApiReponse {
        return try {
             val response = client.get("https://newsapi.org/v2/top-headlines") {
